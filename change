@@ -1,0 +1,42 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
+import mwclient
+import re
+import sys
+from ExodusBot import bot
+from ExodusBot import password
+
+# CC-BY-SA Rayukk
+
+class InfoboxChangerBot(object):
+	"""Removes the tempate {{Infobox music festival}} and replaces it with {{Infobox recurring event}}. If the parameter "founders"
+	is used, it will be replaced with "founder_name".
+	"""
+
+	def __init__(self):
+		self.pages = []
+		self.donenow = 0
+		for page in mwclient.listing.Category(site, 'Category:Pages that use Infobox music festival'):
+			if page.namespace == 0:
+				self.pages.append(page)
+
+	def process_pages(self):
+		for page in self.pages:
+			if bot.donenow("User:ExodusBot/disable/musicfestival",donenow=self.donenow,donenow_div=5) == True:
+				contents = page.edit()
+				new_contents = re.sub(r"""{{(Infobox music festival)(\.*)""", r"""\2{{Infobox recurring event""", contents, flags=re.UNICODE)
+				new_contents = re.sub(r"""| founders     =)(\.*)""", r"""\2{{| founder_name     =""", contents, flags=re.UNICODE)
+				page.save(new_contents,summary="Replacing {{[[Template:Infobox music festival|Infobox music festival]]}} with {{[[Template:Infobox recurring event|Infobox recurring event]]}} [[WP:BOT|bot]] - [[User:ExodusBot/disable/musicfestival|disable]])")
+				self.donenow += 1
+			else:
+				sys.exit()
+
+global site
+site = mwclient.Site('en.wikipedia.org')
+site.login(password.username, password.password)
+
+print "Bot is Running!"
+thebot = InfoboxChangerBot()
+thebot.process_pages()
